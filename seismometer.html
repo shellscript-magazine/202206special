@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>簡易地震計</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.9.3/Chart.bundle.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-streaming@1.9.0"></script>
+  <script src="https://unpkg.com/mqtt/dist/mqtt.min.js"></script>
+</head>
+<body>
+  <canvas id="myChart"></canvas>
+  <script>
+    const client = mqtt.connect('ws://raspibroker.local:8081');
+    const ctx = document.getElementById('myChart').getContext('2d');
+    var chart = new Chart(ctx, {
+      type: 'line',
+      data: {
+        datasets: [{
+          data: [],
+          label: 'X軸',
+          borderColor: 'rgb(255,0,255)',
+          backgroundColor: 'rgba(255, 0, 255, 0)',
+          lineTension: 0,
+        }, {
+          data: [],
+          label: 'Y軸',
+          borderColor: 'rgb(0,255,0)',
+          backgroundColor: 'rgba(0, 255, 0, 0)',
+	  lineTension: 0,
+        }, {
+          data: [],
+          label: 'Z軸',
+          borderColor: 'rgb(0,0,255)',
+          backgroundColor: 'rgba(0, 0, 255, 0)',
+	  lineTension: 0,
+        }]
+      },
+      options: {
+        scales: {
+          xAxes: [{
+            type: 'realtime',
+            realtime: {
+                 delay: 2000,
+            },
+          }],
+          yAxes: [{
+	    ticks: {
+              min: -32767,
+              max: 32767
+            }
+          }]
+        }
+      }
+    });
+    client.on('connect', () => {
+      console.log('connected');
+      client.subscribe('home/seismometer1');
+    });
+    client.on('message', (topic, message) => {
+      console.log(message.toString());
+      acc_json = JSON.parse(message.toString());
+      chart.data.datasets[0].data.push({
+        x: Date.now(),
+        y: acc_json.AcX
+      });
+      chart.data.datasets[1].data.push({
+        x: Date.now(),
+        y: acc_json.AcY
+      });
+      chart.data.datasets[2].data.push({
+        x: Date.now(),
+        y: acc_json.AcZ - 16384
+      });
+      chart.update();
+    });
+  </script>
+</body>
+</html>
