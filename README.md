@@ -1,2 +1,2 @@
-# 202206special
-This Code published in Shell Script Magazine's special article
+シェルスクリプトマガジン Vol.78（2022年6月号）特別企画
+記事内で作成したコードをまとめています。 
